@@ -1,4 +1,5 @@
 #include "main.h"
+#include <stdio.h>
 
 /**
  * _printf - produces output according to a format
@@ -7,43 +8,50 @@
  */
 int _printf(const char *format, ...)
 {
-	int (*ptr_func)(va_list, flags_t *);
-	const char *ptr;
-	va_list list;
-	flags_t flags = {0, 0, 0};
-	int count = 0;
+	va_list args;
+	va_start(args, format);
 
-	va_start(list, format);
-	if (!format || (format[0] == '%' && !format[1]))
-		return (-1);
-
-	if (format[0] == '%' && format[1] == ' ' && !format[2])
-		return (-1);
-	for (ptr = format; *ptr; ptr++)
+int count = 0;
+for (const char *p = format; *p != '\0'; p++)
+  {
+     if (*p != '%')
+     {
+	putchar(*p);
+	count++;
+	continue++;
+     }
+     p++;
+     switch (*p)
+     {
+	case 'c' :
+         {
+ 	   char c = va_arg(args, int);
+	   putchar(c);
+	   count++;
+	   break;
+         }
+	case 's':
 	{
-		if (*ptr == '%')
-		{
-			ptr++;
-
-			if (*ptr == '%')
-			{
-				count += _print_char('%');
-				continue;
-			}
-
-			while (set_flag(*ptr, &flags))
-				ptr++;
-			ptr_func = get_print(*ptr);
-
-			if (!ptr_func)
-				count += _printf("%%%c", *ptr);
-			else
-				count += ptr_func(list, &flags);
-		}
-		else
-			count += _print_char(*ptr);
+	  char *s = va_arg(args, char *);
+	  for (char *c = s; *c != '\0'; c++)
+	  {
+	    putchar (*c);
+	    count++;
+	  }
+	  break;
 	}
-	_print_char(-1);
-	va_end(list);
-	return (count);
+	case '%' : 
+	 {
+	   putchar('%');
+	   count++;
+	   break;
+	 }
+	default:
+	   break;
+ 
+     }  
+
+  }
+  va_end(args);
+  return count;
 }
