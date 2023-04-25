@@ -24,6 +24,7 @@
  * @fmt: The format.
  * @fn: The function associated.
  */
+
 struct fmt
 {
 	char fmt;
@@ -37,6 +38,7 @@ struct fmt
  * @fmt: The format.
  * @fm_t: The function associated.
  */
+
 typedef struct fmt fmt_t;
 
 int _printf(const char *format, ...);
@@ -54,6 +56,7 @@ int print_percent(va_list types, char buffer[],
 	int flags, int width, int precision, int size);
 
 /* Functions to print numbers */
+
 int print_int(va_list types, char buffer[],
 	int flags, int width, int precision, int size);
 int print_binary(va_list types, char buffer[],
