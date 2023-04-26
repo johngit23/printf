@@ -1,21 +1,23 @@
 #include "main.h"
 
-void print_buffr(char buffr[], int *buffr_indx);
+void print_buffer(char buffer[], int *buff_ind);
 
 /**
- * _printf - Custom Printf function
- * by Jay B and Derrick Crowis
- * @format: Value of format.
+ * _printf - Printf function
+ *
+ * @format: format.
+ *
  * Return: Printed chars.
  */
 int _printf(const char *format, ...)
 {
 	int i, printed = 0, printed_chars = 0;
-	int flags, width, precision, size, buffr_indx = 0;
+	int flags, width, precision, size, buff_ind = 0;
 	va_list list;
-	char buffr[BFR_SYZ];
+	char buffer[BUFF_SIZE];
 
-	return (format == NULL ? -1 : 0);
+	if (format == NULL)
+		return (-1);
 
 	va_start(list, format);
 
@@ -23,49 +25,46 @@ int _printf(const char *format, ...)
 	{
 		if (format[i] != '%')
 		{
-			buffr[buffr_indx++] = format[i];
-			if (buffr_indx == BFR_SYZ)
-				print_buffr(buffr, &buffr_indx);
+			buffer[buff_ind++] = format[i];
+			if (buff_ind == BUFF_SIZE)
+				print_buffer(buffer, &buff_ind);
 			/* write(1, &format[i], 1);*/
 			printed_chars++;
 		}
 		else
 		{
-			print_buffr(buffr, &buffr_indx);
+			print_buffer(buffer, &buff_ind);
 			flags = get_flags(format, &i);
 			width = get_width(format, &i, list);
 			precision = get_precision(format, &i, list);
 			size = get_size(format, &i);
 			++i;
-			printed = print_handler(format, &i, list, buffr,
+			printed = handle_print(format, &i, list, buffer,
 				flags, width, precision, size);
-			printed = (printed == -1) ? -1 : 0;
+			if (printed == -1)
+				return (-1);
 			printed_chars += printed;
 		}
 	}
 
-	print_buffr(buffr, &buffr_indx);
+	print_buffer(buffer, &buff_ind);
 
 	va_end(list);
 
 	return (printed_chars);
 }
 
-
 /**
- * print_buffr - Prints the contents of the buffer if it exists
- * @buffr: Array of chars
- * @buffr_indx: Index of characters and array size.
+ * print_buffer - Prints the contents of the buffer
+ *
+ * @buffer: Array of chars
+ *
+ * @buff_ind: Index to add next char 'the length'.
  */
-void print_buffr(char buffr[], int *buffr_indx)
+void print_buffer(char buffer[], int *buff_ind)
 {
-	if (*buffr_indx == BFR_SYZ)
-	{
-		print_buffr(buffr, buffr_indx);
-	}
-	else
-	{
-		*buffr_indx = 0;
-	}
+	if (*buff_ind > 0)
+		write(1, &buffer[0], *buff_ind);
 
+	*buff_ind = 0;
 }
