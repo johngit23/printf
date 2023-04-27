@@ -1,117 +1,137 @@
 #include "main.h"
-#include <stdarg.h>
-#include <stdlib.h>
-#include <stdio.h>
+static unsigned int i, count;
+static int value, checker, (*f)(va_list, flags, char);
+static char mod;
 /**
- * _printf -function to print fomarted output
- * @format: the output to be printed
- * Return: number of characters printed
+ * isflag - checks if a character is a flag
+ * @c: char to check
+ * Return: 1 if is flag 0 if not
  */
+
+int isflag(char c)
+{
+	int j;
+	char f[] = "+ #";
+
+	for (j = 0; f[j]; j++)
+	{
+		if (c == f[j])
+			return (1);
+	}
+	return (0);
+}
+/**
+ * isspec - checks if a character is a specifier
+ * @c: char to check
+ * Return: 1 if is flag 0 if not
+ */
+
+int isspec(char c)
+{
+	int j;
+	char s[] = "diucsSpoxX";
+
+	for (j = 0; s[j]; j++)
+	{
+		if (c == s[j])
+			return (1);
+	}
+	return (0);
+}
+/**
+ * ismod - checks if a character is a modifier
+ * @c: charcter to check
+ * Return: 0 if not, 1 if it is
+ */
+int ismod(char c)
+{
+	char *mods = "lh";
+	int j;
+
+	for (j = 0; mods[j]; j++)
+		if (mods[j] == c)
+			return (1);
+	return (0);
+}
+
+/**
+ * getparams - checks if character is a flag or specifier and sets
+ * the value of flag;
+ * @fmt: string
+ * @i: address of string index
+ * @flg: flag pointer
+ * @mod: modifier
+ * Return: 1 flag found and specifier is good , returns 0 if neither
+ * -1 if flag and nextchar is null or not specifier
+ */
+int getparams(const char *fmt, unsigned int *i, flags *flg, char *mod)
+{
+	int d = *i;
+
+	*mod = 0;
+	for (; isflag(fmt[d]); d++)
+	{
+		switch (fmt[d])
+		{
+		case '+':
+			flg->plus = 1;
+			break;
+		case ' ':
+			flg->space = 1;
+			break;
+		case '#':
+			flg->hash = 1;
+			break;
+		}
+	}
+	if (ismod(fmt[d]))
+	{
+		*mod = fmt[d];
+		d++;
+	}
+	*i = d;
+	if (!isspec(fmt[d]) && fmt[d])
+		return (0);
+	if (isspec(fmt[d]))
+		return (1);
+	return (-1);
+}
+/**
+ * _printf - prints a formated text with arguements passed
+ * @format: formated string - formatting is optional
+ * Return: Number of characters printed to screen
+ */
+
 int _printf(const char *format, ...)
 {
-	int i = 0;
-	int j = 0;
 	va_list args;
-	char *buffer = (char *)malloc(1024 * sizeof(char));
+	flags flg = {0, 0, 0};
 
-	if (buffer == NULL)
+	if (format == NULL)
 		return (-1);
-
 	va_start(args, format);
-	while (format && format[i])
+	for (i = 0, count = 0; format[i] != 0; i++)
 	{
-		if (format[i] == '%')
-		{
-			i++;
-			if (format[i] == 'i' || format[i] == 'd'
-					|| format[i] == 'o' 
-					||format[i] == 'R' || format[i] == 's'
-					|| format[i] == 'b')
-				handle_format(format[i], args, buffer, &j);
-			else
-				handle_format2(format[i], args, buffer, &j);
-		}
-		else if (format[i] == '\\')
-		{
-			i++;
-			switch (format[i])
-			{
-				case 'n':
-						buffer[j++] = '\n';
-			}
-		}
+		if (format[i] != '%')
+			count += _putchar(format[i]);
 		else
 		{
-			buffer[j] = format[i];
-			j++;
+			i++;
+			if (format[i] == '\0')
+				return (-1);
+			checker = getparams(format, &i, &flg, &mod);
+			if (checker == 0)
+				count += print_unknown(flg, format[i]);
+			if (checker == -1)
+				return (-1);
+			if (checker == 1)
+			{
+				f = spec_func(format[i]);
+				value = f(args, flg, mod);
+				count += value;
+			}
 		}
-		i++;
 	}
-	fwrite(buffer, j, 1, stdout);
 	va_end(args);
-	free(buffer);
-	return (j);
-}
-/**
- * _strlen - function to calculate length of string
- * @s: the string
- * Return: length of string
- */
-int _strlen(char *s)
-{
-	int length = 0;
-
-	while (s[length] != '\0')
-	{
-		length++;
-	}
-	return (length);
-}
-/**
- * str_rev - function to reverse a string
- * @str: the string
- * Return: the reversed string
- */
-char *str_rev(char *str)
-{
-	int i = 0;
-	int len = 0;
-	char c;
-
-	if (!str)
-		return (NULL);
-	while (str[len] != '\0')
-	{
-		len++;
-	}
-	while (i < (len / 2))
-	{
-		c = str[i];
-		str[i] = str[len - i - 1];
-		str[len - i - 1] = c;
-		i++;
-	}
-	return (str);
-}
-/**
- * _strcpy - function to copy string to a different memory location
- * @dest: destination string
- * @src: source string
- * Return: destination string
- */
-char *_strcpy(char *dest, char *src)
-{
-	int l = 0;
-	int x = 0;
-
-	while (*(src + l) != '\0')
-	{
-		l++;
-	}
-	for ( ; x < l ; x++)
-	{
-		dest[x] = src[x];
-	}
-	dest[l] = '\0';
-	return (dest);
+	return (count);
 }
